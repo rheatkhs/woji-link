@@ -89,7 +89,12 @@ export default function Welcome({ short_url }: { short_url?: string }) {
                         </div>
                         <button
                             type="submit"
-                            className="mt-4 flex w-full transform items-center justify-center gap-2 rounded-lg bg-purple-600 py-3 text-white transition duration-300 hover:scale-105 hover:bg-purple-700"
+                            disabled={processing || window.location.pathname === '/shorten'}
+                            className={`mt-4 flex w-full transform items-center justify-center gap-2 rounded-lg py-3 text-white transition duration-300 hover:scale-105 ${
+                                processing || window.location.pathname === '/shorten'
+                                    ? 'cursor-not-allowed bg-gray-600'
+                                    : 'bg-purple-600 hover:bg-purple-700'
+                            }`}
                         >
                             {processing ? 'Shortening...' : 'Shorten My Link'} <WandSparkles size={18} />
                         </button>
