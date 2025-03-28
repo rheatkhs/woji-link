@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Clipboard, ExternalLink, X } from 'lucide-react';
 import { useState } from 'react';
@@ -14,24 +14,50 @@ interface Link {
     created_at: string;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    {
-        title: 'Links',
-        href: '/links',
-    },
-];
+interface Pagination {
+    current_page: number;
+    last_page: number;
+    prev_page_url: string | null;
+    next_page_url: string | null;
+    links: { url: string | null; label: string; active: boolean }[];
+}
+
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Links', href: '/links' }];
 
 export default function Links() {
-    const { links } = usePage<{ links: Link[] }>().props;
+    const { links, pagination } = usePage<{ links: Link[]; pagination: Pagination }>().props;
     const [toast, setToast] = useState<string | null>(null);
 
     const showToast = (message: string) => {
         setToast(message);
-        setTimeout(() => setToast(null), 2500); // Hide toast after 2.5s
+        setTimeout(() => setToast(null), 2500);
     };
 
-    // Base URL (update this with your actual domain)
     const baseUrl = window.location.origin;
+
+    // Generate Pagination Numbers
+    const getPageNumbers = () => {
+        const pages: (number | string)[] = [];
+        const { current_page, last_page } = pagination;
+        const maxPagesToShow = 3; // Pages before and after current
+
+        if (last_page <= 7) {
+            for (let i = 1; i <= last_page; i++) pages.push(i);
+        } else {
+            pages.push(1);
+
+            if (current_page > maxPagesToShow + 2) pages.push('...');
+
+            const start = Math.max(2, current_page - maxPagesToShow);
+            const end = Math.min(last_page - 1, current_page + maxPagesToShow);
+            for (let i = start; i <= end; i++) pages.push(i);
+
+            if (current_page < last_page - maxPagesToShow - 1) pages.push('...');
+            pages.push(last_page);
+        }
+
+        return pages;
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -39,10 +65,11 @@ export default function Links() {
             <div className="flex h-full flex-1 flex-col gap-6 rounded-xl p-6">
                 <h1 className="text-3xl font-bold text-white">Your Shortened Links</h1>
 
+                {/* Links List */}
                 <div className="mt-4 space-y-4">
                     {links.length > 0 ? (
                         links.map((link) => {
-                            const fullShortUrl = `${baseUrl}/${link.short_code}`; // Construct full URL
+                            const fullShortUrl = `${baseUrl}/${link.short_code}`;
 
                             return (
                                 <Card key={link.id} className="border border-gray-700 bg-transparent shadow-lg">
@@ -90,6 +117,51 @@ export default function Links() {
                         })
                     ) : (
                         <p className="text-gray-400">No links found.</p>
+                    )}
+                </div>
+
+                {/* Pagination */}
+                <div className="mt-6 flex items-center justify-center gap-2">
+                    {/* Previous Page Button */}
+                    {pagination.prev_page_url && (
+                        <Button
+                            variant="outline"
+                            className="border-gray-700 text-white hover:border-gray-500"
+                            onClick={() => router.visit(pagination.prev_page_url!)}
+                        >
+                            « Prev
+                        </Button>
+                    )}
+
+                    {/* Page Numbers */}
+                    {getPageNumbers().map((page, index) =>
+                        typeof page === 'number' ? (
+                            <Button
+                                key={index}
+                                variant={page === pagination.current_page ? 'default' : 'outline'}
+                                className={`border-gray-700 text-white hover:border-gray-500 ${
+                                    page === pagination.current_page ? 'bg-gray-700 text-white' : ''
+                                }`}
+                                onClick={() => router.visit(`?page=${page}`)}
+                            >
+                                {page}
+                            </Button>
+                        ) : (
+                            <span key={index} className="px-2 text-gray-400">
+                                {page}
+                            </span>
+                        ),
+                    )}
+
+                    {/* Next Page Button */}
+                    {pagination.next_page_url && (
+                        <Button
+                            variant="outline"
+                            className="border-gray-700 text-white hover:border-gray-500"
+                            onClick={() => router.visit(pagination.next_page_url!)}
+                        >
+                            Next »
+                        </Button>
                     )}
                 </div>
             </div>
