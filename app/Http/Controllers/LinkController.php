@@ -44,6 +44,12 @@ class LinkController extends Controller
             'short_url' => url('/' . $shortCode),
         ]);
     }
+    public function destroy($id)
+    {
+        $link = Link::findOrFail($id);
+        $link->delete();
+        return redirect()->back()->with('message', 'Link deleted successfully!');
+    }
     public function redirect($shortCode)
     {
         $link = Link::where('short_code', $shortCode)->firstOrFail();

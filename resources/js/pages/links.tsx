@@ -1,10 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Clipboard, ExternalLink, X } from 'lucide-react';
+import { Clipboard, ExternalLink, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 
 interface Link {
@@ -27,6 +28,8 @@ const breadcrumbs: BreadcrumbItem[] = [{ title: 'Links', href: '/links' }];
 export default function Links() {
     const { links, pagination } = usePage<{ links: Link[]; pagination: Pagination }>().props;
     const [toast, setToast] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [selectedLinkId, setSelectedLinkId] = useState<number | null>(null);
 
     const showToast = (message: string) => {
         setToast(message);
@@ -35,11 +38,27 @@ export default function Links() {
 
     const baseUrl = window.location.origin;
 
+    const openDeleteModal = (id: number) => {
+        setSelectedLinkId(id);
+        setShowModal(true);
+    };
+
+    const handleDelete = () => {
+        if (selectedLinkId) {
+            router.delete(`/links/${selectedLinkId}`, {
+                onSuccess: () => {
+                    showToast('🗑️ Link deleted successfully!');
+                    setShowModal(false);
+                },
+            });
+        }
+    };
+
     // Generate Pagination Numbers
     const getPageNumbers = () => {
         const pages: (number | string)[] = [];
         const { current_page, last_page } = pagination;
-        const maxPagesToShow = 3; // Pages before and after current
+        const maxPagesToShow = 3;
 
         if (last_page <= 7) {
             for (let i = 1; i <= last_page; i++) pages.push(i);
@@ -110,6 +129,15 @@ export default function Links() {
                                             >
                                                 <ExternalLink size={16} /> Open
                                             </Button>
+
+                                            {/* Delete Button */}
+                                            <Button
+                                                variant="destructive"
+                                                className="bg-red-600 text-white hover:bg-red-700"
+                                                onClick={() => openDeleteModal(link.id)}
+                                            >
+                                                <Trash2 size={16} /> Delete
+                                            </Button>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -122,7 +150,6 @@ export default function Links() {
 
                 {/* Pagination */}
                 <div className="mt-6 flex items-center justify-center gap-2">
-                    {/* Previous Page Button */}
                     {pagination.prev_page_url && (
                         <Button
                             variant="outline"
@@ -133,7 +160,6 @@ export default function Links() {
                         </Button>
                     )}
 
-                    {/* Page Numbers */}
                     {getPageNumbers().map((page, index) =>
                         typeof page === 'number' ? (
                             <Button
@@ -153,7 +179,6 @@ export default function Links() {
                         ),
                     )}
 
-                    {/* Next Page Button */}
                     {pagination.next_page_url && (
                         <Button
                             variant="outline"
@@ -165,6 +190,24 @@ export default function Links() {
                     )}
                 </div>
             </div>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={showModal} onOpenChange={setShowModal}>
+                <DialogContent className="border-gray-700 text-white">
+                    <DialogHeader>
+                        <DialogTitle>Confirm Deletion</DialogTitle>
+                    </DialogHeader>
+                    <p>Are you sure you want to delete this link? This action cannot be undone.</p>
+                    <DialogFooter>
+                        <Button variant="outline" className="border-gray-700 text-white" onClick={() => setShowModal(false)}>
+                            Cancel
+                        </Button>
+                        <Button variant="destructive" className="bg-red-600 hover:bg-red-700" onClick={handleDelete}>
+                            Confirm Delete
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Custom Toast Notification */}
             <AnimatePresence>

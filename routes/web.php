@@ -23,3 +23,4 @@ require __DIR__ . '/auth.php';
 
 Route::post('/shorten', [LinkController::class, 'store']);
 Route::get('/{shortCode}', [LinkController::class, 'redirect']);
+Route::delete('/links/{id}', [LinkController::class, 'destroy']);
