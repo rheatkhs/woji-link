@@ -38,6 +38,7 @@ class LinkController extends Controller
         Link::create([
             'original_url' => $request->original_url,
             'short_code' => $shortCode,
+            'clicks' => 0,
         ]);
 
         return Inertia::render('welcome', [
@@ -53,6 +54,7 @@ class LinkController extends Controller
     public function redirect($shortCode)
     {
         $link = Link::where('short_code', $shortCode)->firstOrFail();
+        $link->increment('clicks');
         return redirect($link->original_url);
     }
 }
