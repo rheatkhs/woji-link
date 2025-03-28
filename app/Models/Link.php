@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class Link extends Model
 {
     use HasFactory;
-
     protected $fillable = ['original_url', 'short_code'];
+    public function analytics()
+    {
+        return $this->hasMany(LinkAnalytics::class);
+    }
 }
