@@ -30,11 +30,30 @@ export default function Analytics() {
 
     const [selectedLink, setSelectedLink] = useState<LinkItem | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [modalPagination, setModalPagination] = useState({
+        currentPage: 1,
+        itemsPerPage: 5,
+    });
 
     // Open Modal with Selected Link Data
     const openAnalyticsModal = (link: LinkItem) => {
         setSelectedLink(link);
         setShowModal(true);
+        setModalPagination({ currentPage: 1, itemsPerPage: 5 });
+    };
+
+    // Paginate analytics data within modal
+    const paginatedAnalytics = selectedLink?.analytics
+        ? selectedLink.analytics.slice(
+              (modalPagination.currentPage - 1) * modalPagination.itemsPerPage,
+              modalPagination.currentPage * modalPagination.itemsPerPage,
+          )
+        : [];
+
+    const totalModalPages = selectedLink ? Math.ceil(selectedLink.analytics.length / modalPagination.itemsPerPage) : 0;
+
+    const handleModalPageChange = (page: number) => {
+        setModalPagination((prev) => ({ ...prev, currentPage: page }));
     };
 
     return (
@@ -42,7 +61,7 @@ export default function Analytics() {
             <Head title="Analytics" />
 
             <div className="flex flex-col gap-6 p-6">
-                <h1 className="text-3xl font-bold text-white">Dashboard Overview</h1>
+                <h1 className="text-3xl font-bold text-white">Analytics Overview</h1>
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
@@ -69,7 +88,7 @@ export default function Analytics() {
                 <h2 className="mt-6 text-2xl font-bold text-white">Link Click Analytics</h2>
                 <table className="mt-4 w-full border-collapse border border-gray-700">
                     <thead>
-                        <tr className="bg-gray-800">
+                        <tr className="bg-purple-800">
                             <th className="border border-gray-700 px-4 py-2">Short Code</th>
                             <th className="border border-gray-700 px-4 py-2">Original URL</th>
                             <th className="border border-gray-700 px-4 py-2">Total Clicks</th>
@@ -81,7 +100,7 @@ export default function Analytics() {
                             links.map((link) => (
                                 <tr key={link.id}>
                                     <td className="border px-4 py-2 text-center">
-                                        <span className="inline-block rounded-md bg-gray-800 px-3 py-1 text-sm font-semibold text-white">
+                                        <span className="inline-block rounded-md bg-purple-800 px-3 py-1 text-sm font-semibold text-white">
                                             {link.short_code}
                                         </span>
                                     </td>
@@ -203,8 +222,8 @@ export default function Analytics() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-600">
-                                        {selectedLink.analytics.length > 0 ? (
-                                            selectedLink.analytics.map((entry, index) => (
+                                        {paginatedAnalytics.length > 0 ? (
+                                            paginatedAnalytics.map((entry, index) => (
                                                 <tr key={index} className="transition hover:bg-gray-800">
                                                     <td className="px-4 py-3 break-all">{entry.ip_address}</td>
                                                     <td className="px-4 py-3 break-all">{entry.device}</td>
@@ -223,6 +242,44 @@ export default function Analytics() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Modal Pagination Controls */}
+                            {selectedLink && selectedLink.analytics.length > 0 && (
+                                <div className="mt-6 flex items-center justify-center gap-2">
+                                    {modalPagination.currentPage > 1 && (
+                                        <Button
+                                            variant="outline"
+                                            className="border-gray-700 text-white hover:border-gray-500"
+                                            onClick={() => handleModalPageChange(modalPagination.currentPage - 1)}
+                                        >
+                                            « Prev
+                                        </Button>
+                                    )}
+
+                                    {Array.from({ length: totalModalPages }, (_, i) => i + 1).map((page) => (
+                                        <Button
+                                            key={page}
+                                            variant={page === modalPagination.currentPage ? 'default' : 'outline'}
+                                            className={`border-gray-700 text-white hover:border-gray-500 ${
+                                                page === modalPagination.currentPage ? 'bg-gray-700 text-white' : ''
+                                            }`}
+                                            onClick={() => handleModalPageChange(page)}
+                                        >
+                                            {page}
+                                        </Button>
+                                    ))}
+
+                                    {modalPagination.currentPage < totalModalPages && (
+                                        <Button
+                                            variant="outline"
+                                            className="border-gray-700 text-white hover:border-gray-500"
+                                            onClick={() => handleModalPageChange(modalPagination.currentPage + 1)}
+                                        >
+                                            Next »
+                                        </Button>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     ) : (
                         <p className="text-gray-400">No analytics data available.</p>
