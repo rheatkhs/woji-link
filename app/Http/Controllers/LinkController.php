@@ -78,17 +78,12 @@ class LinkController extends Controller
     // Helper function to detect device type
     private function detectDevice($userAgent)
     {
-        if (strpos($userAgent, 'Mobile') !== false) return 'Mobile';
-        if (strpos($userAgent, 'Tablet') !== false) return 'Tablet';
-        return 'Desktop';
+        return str_contains($userAgent, 'Mobile') ? 'Mobile' : (str_contains($userAgent, 'Tablet') ? 'Tablet' : 'Desktop');
     }
     // Helper function to detect browser
     private function detectBrowser($userAgent)
     {
-        if (strpos($userAgent, 'Chrome') !== false) return 'Chrome';
-        if (strpos($userAgent, 'Firefox') !== false) return 'Firefox';
-        if (strpos($userAgent, 'Safari') !== false) return 'Safari';
-        return 'Other';
+        return str_contains($userAgent, 'Chrome') ? 'Chrome' : (str_contains($userAgent, 'Firefox') ? 'Firefox' : (str_contains($userAgent, 'Safari') ? 'Safari' : 'Other'));
     }
 
     // Get location from IP (Using external API)
